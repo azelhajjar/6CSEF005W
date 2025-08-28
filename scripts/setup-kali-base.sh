@@ -19,7 +19,7 @@ pip3 install scapy
 
 echo "[i] Installing RTL8812AU driver for Alfa adapter..."
 echo "[i] Installing Alfa driver..."
-sudo ./alfa-driver-kali.sh --noreboot
+sudo ./alfa-driver-kali --noreboot
 
 echo "[✓] Kali base setup complete."
 
