@@ -36,6 +36,18 @@ For this module we will be using the Kali Linux machine as the attacker machine
   - From home: [https://download.cse.westminster.ac.uk/VirtualMachines/](https://download.cse.westminster.ac.uk/VirtualMachines/)
   - On Eduroam: [http://10.20.144.78/download/VMs/](http://10.20.144.78/download/VMs/)
   - Save the VM in a directory with sufficient space (e.g. `VMs` folder)
+ 
+## Problems You May Encounter
+
+**Common issues on personal machines:**
+
+- VM won’t start:
+  - Free up disk space
+  - Enable virtualisation in BIOS ([Enable on Windows](https://support.microsoft.com/en-us/windows/enable-virtualisation-on-windows-11-pcs-c5578302-6e43-4b4b-a449-8ced115f58e1))
+- Missing host-only adapter: create it in VirtualBox preferences
+- USB device not detected: try USB 1.1 setting in VM config
+- Network doesn't update: run `sudo dhclient`
+- On macOS: [build instructions here](https://support.cse.westminster.ac.uk/w/index.php/VMWare)
 
 ---
 
@@ -202,19 +214,6 @@ VMWare setup:
 </figure>
 
 ---
-
-## Problems You May Encounter
-
-**Common issues on personal machines:**
-
-- VM won’t start:
-  - Free up disk space
-  - Enable virtualisation in BIOS ([Enable on Windows](https://support.microsoft.com/en-us/windows/enable-virtualisation-on-windows-11-pcs-c5578302-6e43-4b4b-a449-8ced115f58e1))
-- Missing host-only adapter: create it in VirtualBox preferences
-- USB device not detected: try USB 1.1 setting in VM config
-- Network doesn't update: run `sudo dhclient`
-- On macOS: [build instructions here](https://www.virtualbox.org/wiki/Mac%20OS%20X%20build%20instructions)
-
 ---
 
 ## Connecting to the Network and Running an Access Point
