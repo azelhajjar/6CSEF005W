@@ -1,52 +1,74 @@
 #!/bin/bash
 # rename-interface.sh
-# Renames a network interface persistently using systemd .link rules
-# Usage: sudo ./rename-interface.sh [current_iface] [new_name]
-
-set -e
+# Renames a USB wireless interface to a user-defined name (default: lab-wlan)
+# Usage: ./rename-interface.sh [current_iface] [new_name]
+# Author: Dr Ayman El Hajjar
 
 DEFAULT_TARGET="lab-wlan"
-LINK_DIR="/etc/systemd/network"
+udev_file="/etc/udev/rules.d/70-persistent-net.rules"
 
-if [[ $EUID -ne 0 ]]; then
-  echo "[!] Please run as root: sudo $0 [current_iface] [new_name]"
-  exit 1
-fi
+echo "[i] Scanning for USB wireless interfaces..."
 
+# Step 1: Find USB network interfaces
+usb_candidates=()
+for iface in $(ls /sys/class/net); do
+  if [[ -d "/sys/class/net/$iface/device" ]]; then
+    driver_path=$(readlink -f "/sys/class/net/$iface/device/driver")
+    if [[ "$driver_path" == *"usb"* ]]; then
+      usb_candidates+=("$iface")
+    fi
+  fi
+done
+
+# Step 2: Confirm wireless capability
+valid_iw=($(iw dev | grep Interface | awk '{print $2}'))
+usb_wireless=()
+for iface in "${usb_candidates[@]}"; do
+  if [[ " ${valid_iw[*]} " == *" $iface "* ]]; then
+    usb_wireless+=("$iface")
+  fi
+done
+
+# Step 3: Interface selection logic
 if [[ $# -ge 1 ]]; then
   selected_iface="$1"
+  if [[ ! " ${usb_wireless[*]} " =~ " $selected_iface " ]]; then
+    echo "[!] Specified interface '$selected_iface' is not a valid USB wireless interface."
+    exit 1
+  fi
 else
-  selected_iface="wlan0"
+  if [[ ${#usb_wireless[@]} -eq 0 ]]; then
+    echo "[!] No USB wireless interfaces found."
+    exit 1
+  fi
+  selected_iface="${usb_wireless[0]}"
 fi
 
+# Step 4: Target name logic
 if [[ $# -ge 2 ]]; then
   new_name="$2"
 else
   new_name="$DEFAULT_TARGET"
 fi
 
-if [[ ! -d "/sys/class/net/$selected_iface" ]]; then
-  echo "[!] Interface '$selected_iface' not found."
-  exit 1
-fi
+echo "[+] Selected interface: $selected_iface"
+echo "[+] New name will be: $new_name"
 
 mac=$(cat "/sys/class/net/$selected_iface/address")
-link_file="$LINK_DIR/10-$new_name.link"
+echo "[i] MAC address: $mac"
 
-echo "[i] Creating systemd .link file at $link_file"
-mkdir -p "$LINK_DIR"
+# Write udev rule
+echo "SUBSYSTEM==\"net\", ACTION==\"add\", ATTR{address}==\"$mac\", NAME=\"$new_name\"" | sudo tee "$udev_file" > /dev/null
 
-cat <<EOF > "$link_file"
-[Match]
-MACAddress=$mac
+echo "[+] Interface $selected_iface will be renamed to $new_name on next boot."
+echo "[i] udev rule written to: $udev_file"
 
-[Link]
-Name=$new_name
-EOF
+read -p "[?] Do you want to reboot now to apply changes? (y/n): " reboot_choice
+if [[ "$reboot_choice" =~ ^([Yy]|[Yy][Ee][Ss])$ ]]; then
+  echo "[i] Rebooting..."
+  sudo reboot
+else
+  echo "[i] Please reboot manually before continuing."
+fi
 
-echo "[i] Reloading udev rules..."
-udevadm control --reload
-systemctl restart systemd-udevd
-
-echo "[✓] Rule written. System will reboot now to apply ."
-sudo reboot
+exit 0
