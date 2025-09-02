@@ -73,10 +73,16 @@ If missing, download from:
   - Deleting the VM and its folder will allow you to start from screen state. This is important if another student was using the VM before you. 
 - Click on `File` → Open` → and browse the Kai linux extracted folder
   - Select the file `kali-linux-2025.2-vmware-amd64.vmx` and click `Open`
+
+<figure>
+  <img src="img/lab1.1/deploy kali on VM" alt="Deploy Kali Linux">
+  <figcaption><em>Figure: Deploy Kali Linux</em></figcaption>
+</figure>
+
 - The Kali Linux machine should be deployed now and you should be able to see it on the list of VMs bar to the left.
 
 <figure>
-  <img src="img/lab1.1/user1.png" alt="Deployed Kali Linux">
+  <img src="img/lab1.1/deployed kali linux" alt="Deployed Kali Linux">
   <figcaption><em>Figure: Deployed Kali Linux</em></figcaption>
 </figure>
 
