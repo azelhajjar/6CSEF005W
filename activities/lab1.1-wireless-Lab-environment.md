@@ -290,7 +290,7 @@ Expected IP: `192.168.140.x`
 
 At this stage, your lab environment is fully operational:
 
-- The USB adapter is functional as `lab-wlan`
+- The USB adapter is functional as `wlan0`
 - Kali can detect and connect to access points
 - All interfaces are correctly configured
 
