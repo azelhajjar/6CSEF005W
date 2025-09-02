@@ -24,7 +24,7 @@ For this module we will be using the Kali Linux machine as the attacker machine
 ### Setting up the lab environment on your own machine
 
 - You must have administrator privileges to install software. You will need the following:
-  - [VMWare](https://www.virtualbox.org/wiki/Downloads) — virtualisation software used to manage the VMs.
+  - [VMWare](https://support.cse.westminster.ac.uk/w/index.php/VMWare) — virtualisation software used to manage the VMs.
   - [7zip](https://www.7-zip.org/download.html) — used to unpack the module VMs.
   - If downloading from home, connect to the university VPN. Instructions: [University IT Support VPN Guide](https://servicedesk.westminster.ac.uk/support/solutions/articles/51000007428)
 
@@ -169,11 +169,10 @@ Kali VM has two interfaces:
 
 VMWare setup:
 1. Select your VM → **Settings**
-2. Click **Expert Mode**
-3. Go to **Network**
-4. Choose **NAT** if Internet access is needed
-5. Choose **Host-only Adapter** for isolation
-6. Click **OK** to apply
+2. Go to **Network Adapter**
+3. Choose **NAT** if Internet access is needed
+4. Choose **Host-only Adapter** for isolation
+5. Click **OK** to apply
 
 ```
                  Internet ────────────────┐ 
@@ -197,7 +196,10 @@ VMWare setup:
 
 ---
 
-
+<figure>
+  <img src="img/lab1.1/VM network settings.jpg" alt="Deployed Kali Linux" width="40%">
+  <figcaption><em>Figure: VM Network settings</em></figcaption>
+</figure>
 
 ---
 
