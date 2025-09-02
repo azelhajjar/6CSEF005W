@@ -75,14 +75,14 @@ If missing, download from:
   - Select the file `kali-linux-2025.2-vmware-amd64.vmx` and click `Open`
 
 <figure>
-  <img src="img/lab1.1/deploy kali on VM" alt="Deploy Kali Linux">
+  <img src="img/lab1.1/deploy kali on VM.jpg" alt="Deploy Kali Linux">
   <figcaption><em>Figure: Deploy Kali Linux</em></figcaption>
 </figure>
 
 - The Kali Linux machine should be deployed now and you should be able to see it on the list of VMs bar to the left.
 
 <figure>
-  <img src="img/lab1.1/deployed kali linux" alt="Deployed Kali Linux">
+  <img src="img/lab1.1/deployed kali linux.jpg" alt="Deployed Kali Linux">
   <figcaption><em>Figure: Deployed Kali Linux</em></figcaption>
 </figure>
 
