@@ -73,104 +73,28 @@ If missing, download from:
   - Deleting the VM and its folder will allow you to start from screen state. This is important if another student was using the VM before you. 
 - Click on `File` → Open` → and browse the Kai linux extracted folder
   - Select the file `kali-linux-2025.2-vmware-amd64.vmx` and click `Open`
+
+<figure>
+  <img src="img/lab1.1/deploy kali on VM.jpg" alt="Deploy Kali Linux" width="40%">
+  <figcaption><em>Figure: Deploy Kali Linux</em></figcaption>
+</figure>
+
 - The Kali Linux machine should be deployed now and you should be able to see it on the list of VMs bar to the left.
 
 <figure>
-  <img src="img/lab1.1/user1.png" alt="Deployed Kali Linux">
+  <img src="img/lab1.1/deployed kali linux.jpg" alt="Deployed Kali Linux" width="40%">
   <figcaption><em>Figure: Deployed Kali Linux</em></figcaption>
 </figure>
 
-## Network Connectivity
-
-- Kali may require Internet access to install tools or retrieve updates — it's safe to allow Internet access.
-- The lab access points should always be isolated from the Internet — especially when using vulnerable configurations.
-
----
-
-## Compatible Wireless Adapters for Monitor Mode
-
-To perform wireless attacks and capture packets, your adapter must support **monitor mode** and **packet injection**. Most built-in adapters do not.
-
-**Recommended adapters:**
-- Alfa AWUS036NHA — Atheros chipset, 2.4 GHz
-- Alfa AWUS036ACH — Dual-band, works well for WPA2 labs
-- TP-Link TL-WN722N **v1** — only version 1 supports monitor mode
-- Panda PAU06 / PAU09 — good compatibility, USB 2.0
-
-**Avoid:** TL-WN722N v2/v3 (Realtek chipsets — no monitor mode)
-
-To list interfaces:
-
-```bash
-iw dev
-```
-
-- Look for names like `wlx*` or `wlan0` (USB adapter)
-- Interfaces with "no wireless extensions" are not usable
-
-Use the `rename-interface.sh` script to rename your USB interface to `lab-wlan`:
-
-```bash
-cd ~/home/kali/6CSEF005W/scripts
-sudo ./rename-interface.sh
-```
-
-Once renamed, yo ucan verify with:
-
-```bash
-sudo airmon-ng check lab-wlan
-sudo iwconfig lab-wlan
-sudo iw lab-wlan info
-```
-
----
-
-## Understanding Network Connections in Virtual Machines
-
-Kali VM has two interfaces:
-
-- `eth0` — NAT for Internet access (default)
-- `lab-wlan` — USB wireless interface for lab scanning and attacks
-
-VMWare setup:
-1. Select your VM → **Settings**
-2. Click **Expert Mode**
-3. Go to **Network**
-4. Choose **NAT** if Internet access is needed
-5. Choose **Host-only Adapter** for isolation
-6. Click **OK** to apply
-
-```
-                 Internet ────────────────┐ 
-                        │                │
-         ┌──────────────▼────────────┐   │
-         │    Host Machine           │   │
-         │ (Laptop / Lab PC)         │   │
-         │                           │   │
-         │   USB Wi-Fi Adapter       │   │
-         └──────────────┬────────────┘   │
-                        │ USB passthrough│
-                ┌───────▼─────────┐      │
-                │ Virtual Machine │      │
-                │  (Kali Linux)   │─────▶│ eth0 - NAT
-                └───┬─────────────┘      │
-                    │                    │
-            ┌───────▼──────────┐         │
-            │ lab-wlan (Wi-Fi) │─────────┘
-            └──────────────────┘
-```
-
----
-
 ## Start the VMs
+
+To start the VM:
+- Double-click the VM, or select and click **Start**
+- Log in with the credentials below
 
 **Kali Linux VM Credentials:**
 - Username: `kali`
 - Password: `kali`
-
-To start the VM:
-- Double-click the VM, or select and click **Start**
-- Log in with the credentials above
 
 ---
 
@@ -202,6 +126,78 @@ cd ~
   <strong>Figure 1:</strong> Terminal showing student ID in prompt.
 </figcaption>
 </p>
+
+## Network Connectivity
+
+- Kali may require Internet access to install tools or retrieve updates — it's safe to allow Internet access.
+- The lab access points should always be isolated from the Internet — especially when using vulnerable configurations.
+
+---
+
+## Compatible Wireless Adapters for Monitor Mode
+
+To perform wireless attacks and capture packets, your adapter must support **monitor mode** and **packet injection**. Most built-in adapters do not.
+
+**Recommended adapters:**
+- Alfa AWUS036NHA — Atheros chipset, 2.4 GHz
+- Alfa AWUS036ACH — Dual-band, works well for WPA2 labs
+- TP-Link TL-WN722N **v1** — only version 1 supports monitor mode
+- Panda PAU06 / PAU09 — good compatibility, USB 2.0
+
+**Avoid:** TL-WN722N v2/v3 (Realtek chipsets — no monitor mode)
+
+To list interfaces:
+
+```bash
+iw dev
+```
+<figure>
+  <img src="img/lab1.1/check AP iw dev.jpg" alt="Deployed Kali Linux" width="40%">
+  <figcaption><em>Figure: Check AP connected</em></figcaption>
+</figure>
+
+- Look for names like `wlx*` or `wlan0` (USB adapter)
+- Interfaces with "no wireless extensions" are not usable
+
+
+## Understanding Network Connections in Virtual Machines
+
+Kali VM has two interfaces:
+
+- `eth0` — NAT for Internet access (default)
+- `wlan0` — USB wireless interface for lab scanning and attacks
+
+VMWare setup:
+1. Select your VM → **Settings**
+2. Click **Expert Mode**
+3. Go to **Network**
+4. Choose **NAT** if Internet access is needed
+5. Choose **Host-only Adapter** for isolation
+6. Click **OK** to apply
+
+```
+                 Internet ────────────────┐ 
+                        │                │
+         ┌──────────────▼────────────┐   │
+         │    Host Machine           │   │
+         │ (Laptop / Lab PC)         │   │
+         │                           │   │
+         │   USB Wi-Fi Adapter       │   │
+         └──────────────┬────────────┘   │
+                        │ USB passthrough│
+                ┌───────▼─────────┐      │
+                │ Virtual Machine │      │
+                │  (Kali Linux)   │─────▶│ eth0 - NAT
+                └───┬─────────────┘      │
+                    │                    │
+            ┌───────▼──────────┐         │
+            │ lab-wlan (Wi-Fi) │─────────┘
+            └──────────────────┘
+```
+
+---
+
+
 
 ---
 
