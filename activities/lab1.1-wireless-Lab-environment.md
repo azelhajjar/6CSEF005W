@@ -265,7 +265,7 @@ SSID: 6CSEF005W-AP
 If not shown:
 
 ```bash
-sudo ip link set lab-wlan up
+sudo ip link set wlan0 up
 ```
 
 ---
@@ -273,13 +273,13 @@ sudo ip link set lab-wlan up
 ### Connecting to the Access Point
 
 ```bash
-nmcli dev wifi connect 6CSEF005W-AP ifname lab-wlan
+nmcli dev wifi connect 6CSEF005W-AP ifname wlan0
 ```
 
 Then:
 
 ```bash
-ip a show lab-wlan
+ip a show wlan0
 ```
 
 Expected IP: `192.168.140.x`
