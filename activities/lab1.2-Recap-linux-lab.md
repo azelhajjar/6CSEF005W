@@ -12,13 +12,10 @@
 
 # Introduction To Linux
 
-- Linux is more than an OS. It’s an idea where everybody grows together and there’s something for everybody. 
-- For this reason, there are many flavours and distributions for Linux. 
-- The two most commonly used architecture for those distributions are either RPM based or Debian based. 
-- `RPM Red Hat Linux` and `SUSE Linux` were the original major distributions that used the .rpm file format, which is today used in several package management systems.
+- Linux is more than an OS. It’s an idea where everybody grows together and there’s something for everybody. For this reason, there are many flavours and distributions for Linux. 
+- The two most commonly used architecture for those distributions are either RPM based or Debian based. `RPM Red Hat Linux` and `SUSE Linux` were the original major distributions that used the .rpm file format, which is today used in several package management systems.
 - `Debian`: Debian is a distribution that emphasises free software. It supports many hardware platforms. Debian and distributions based on it use the .deb package format and the dpkg package manager and its frontends (such as apt-get or synaptic)
 - `Kali and Ubuntu`, are Debian. All the labs in this module use Debian commands syntax.
-
 `A note`- In most cases, Linux errors are self explanatory. Read the error the terminal throws at you.
 
 ## File system tree 
