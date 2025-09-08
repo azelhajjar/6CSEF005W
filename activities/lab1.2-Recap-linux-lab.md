@@ -20,12 +20,11 @@
 
 ## File system tree 
 
-- Like Windows, a Unix-like operating system such as Linux organises its files in what is called a hierarchical directory structure.
-- This means that they are organised in a tree-like pattern of directories (sometimes called folders in other systems), which may contain files and other directories.
+- Like Windows, a Unix-like operating system such as Linux organises its files in what is called a hierarchical directory structure. This means that they are organised in a tree-like pattern of directories (sometimes called folders in other systems), which may contain files and other directories.
 - The first directory in the filesystem is called the root directory. The root directory contains files and subdirectories, which contain more files and subdirectories, and so on.
 - Note that unlike Windows, which has a separate filesystem tree for each storage device, Unix-like systems such as Linux always have a single filesystem tree, regardless of how many drives or storage devices are attached to the computer.
 - Storage devices are attached (or more correctly, mounted) at various points on the tree according to the whims of the system administrator, the person (or persons) responsible for the maintenance of the system.
-- All files on a Linux system are stored on file systems which are organised into a single inverted tree of directories, know as a file system hierarchy.In the inverted tree, root lies at the top and the branches of directories and sub-directories stretch below the root.
+- All files on a Linux system are stored on file systems which are organised into a single inverted tree of directories, known as a file system hierarchy.In the inverted tree, root lies at the top and the branches of directories and sub-directories stretch below the root.
 
 ```
 /
@@ -55,15 +54,11 @@
 # Learning the shell
 
 - When we speak of the command line, we are really referring to the shell. The shell is a program that takes keyboard commands and passes them to the operating system to carry out.
-- Almost all Linux distributions supply a shell program from the GNU Project called bash.
-- When using a graphical user interface, we need another program called a terminal emulator to interact with the shell. 
-- It is called `terminal`
+- Almost all Linux distributions supply a shell program from the GNU Project called bash. When using a graphical user interface, we need another program called a terminal emulator to interact with the shell. It is called `terminal`
 
 ## Command Execution
 
-- Most commands use `options` consisting of a single character preceded by a dash, such as `-l`.
-- An option is a predefined value that changes the behaviour of a command.
-- Options are typically single-letter flags, like `-a` or `-l`.
+- Most commands use `options` consisting of a single character preceded by a dash, such as `-l`. An option is a predefined value that changes the behaviour of a command. Options are typically single-letter flags, like `-a` or `-l`.
 
 - The `ls` command lists files and directories in the current working directory.
 
