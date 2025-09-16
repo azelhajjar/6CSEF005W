@@ -20,7 +20,7 @@ apt_install() {
     hostapd dnsmasq iproute2 iptables \
     lighttpd freeradius \
     aircrack-ng tcpdump iw rfkill net-tools \
-    ca-certificates curl reaver wash bettercap hcxdumptool mdk4 mac80211-utils \
+    ca-certificates curl reaver bettercap hcxdumptool mdk4  \
     wifite wireshark python3-pip
 }
 
