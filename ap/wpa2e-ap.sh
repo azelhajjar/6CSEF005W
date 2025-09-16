@@ -26,7 +26,7 @@ AP_IP="${AP_IP:-192.168.140.1/24}"
 AP_IP_BASE="${AP_IP_BASE:-192.168.140.1}"
 REGDOM="${REGDOM:-GB}"
 RUNTIME_DIR="${RUNTIME_DIR:-/home/kali/tmp_ap}"
-COURSE_DIR="${COURSE_DIR:-/home/kali/6csef005w}"
+COURSE_DIR="${COURSE_DIR:-/home/kali/6CSEF005W}"
 SSID="${SSID:-6CSEF005W-WPA2E-AP}"
 CHANNEL="${CHANNEL:-6}"
 
@@ -45,7 +45,6 @@ require_root() {
 
 cleanup_trap() {
   info "CTRL-C received: tearing down AP..."
-  "$COURSE_DIR/ap/teardown-ap.sh" || true
   exit 130
 }
 

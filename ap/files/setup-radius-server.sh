@@ -1,191 +1,281 @@
 #!/bin/bash
-# Install and configure FreeRADIUS for WPA2-Enterprise (PEAP/MSCHAPv2)
-# Enhanced version: includes Windows-friendly user formatting, safety backups,
-# permissions, ensures mschap/eap modules enabled, and persistent ICMP allow rules.
-# Reads secret and templates from /home/kali/6csef005w/ap/files
+# setup-freeradius.sh
+# Install and configure FreeRADIUS for WPA2-Enterprise (PEAP/MSCHAPv2) on fresh Debian/Ubuntu/Kali VMs.
+# Usage:
+#   sudo ./setup-freeradius.sh [--debug] [--verify]
 #
-# Usage: sudo ./setup-freeradius.sh
+# Environment overrides:
+#   FILES_DIR=/path/to/files  (default: /home/kali/6CSEF005W/ap/files)
+#   AP_IP=192.168.140.1       (default: 192.168.140.1)
+
 set -euo pipefail
 
-FILES_DIR="/home/kali/6csef005w/ap/files"
+FILES_DIR="${FILES_DIR:-/home/kali/6CSEF005W/ap/files}"
+AP_IP="${AP_IP:-192.168.140.1}"
 RADIUS_SECRET_FILE="$FILES_DIR/radius.secret"
 CLIENT_TMPL="$FILES_DIR/clients-6csef005w.conf.tmpl"
-USERS_FILE_SRC="$FILES_DIR/radius-users"    # Accepts either FreeRADIUS 'users' format OR lines "username:password"
+USERS_FILE_SRC="$FILES_DIR/radius-users"
 
-ETC="/etc/freeradius/3.0"
-CLIENTS_D="$ETC/clients.d"
-MODS_AV="$ETC/mods-available"
-MODS_EN="$ETC/mods-enabled"
+DEBUG_MODE=0
+VERIFY_MODE=0
+for a in "$@"; do
+  case "$a" in
+    --debug)  DEBUG_MODE=1 ;;
+    --verify) VERIFY_MODE=1 ;;
+  esac
+done
 
-# --- Helpers ---
-require_root() {
-  if [ "${EUID:-$(id -u)}" -ne 0 ]; then
-    echo "[!] Please run as root (sudo $0)" >&2
-    exit 1
+if [ "${EUID:-$(id -u)}" -ne 0 ]; then
+  echo "[!] Please run as root: sudo $0" >&2
+  exit 1
+fi
+
+detect_layout() {
+  if [ -d /etc/freeradius/3.0 ]; then
+    echo "/etc/freeradius/3.0"
+  elif [ -d /etc/freeradius ]; then
+    echo "/etc/freeradius"
+  else
+    echo "/etc/freeradius/3.0"
   fi
 }
+ETC="$(detect_layout)"
+CLIENTS_D="$ETC/clients.d"
+CLIENTS_CONF="$ETC/clients.conf"
+MODS_AV="$ETC/mods-available"
+MODS_EN="$ETC/mods-enabled"
+MODS_CFG="$ETC/mods-config"
+
+detect_group() {
+  if getent group freerad >/dev/null; then
+    echo "freerad"
+  elif getent group radiusd >/dev/null; then
+    echo "radiusd"
+  else
+    echo "freerad"
+  fi
+}
+FR_GROUP="$(detect_group)"
+SERVICE_NAME="freeradius"
 
 require_files() {
   [ -f "$RADIUS_SECRET_FILE" ] || { echo "[!] Missing: $RADIUS_SECRET_FILE"; exit 2; }
-  [ -f "$CLIENT_TMPL" ]       || { echo "[!] Missing: $CLIENT_TMPL"; exit 2; }
   [ -f "$USERS_FILE_SRC" ]    || { echo "[!] Missing: $USERS_FILE_SRC"; exit 2; }
 }
 
 install_pkgs() {
+  echo "[*] Installing packages..."
   apt-get update -y
   DEBIAN_FRONTEND=noninteractive apt-get install -y freeradius freeradius-utils iptables-persistent
 }
 
-# Write clients file from template and set safe permissions on radius.secret
-write_clients() {
+ensure_clients_include() {
+  echo "[*] Ensuring clients.d/*.conf is included by clients.conf..."
+  touch "$CLIENTS_CONF"
+  if ! grep -Eq '^\$INCLUDE[[:space:]]+clients\.d/\*\.conf' "$CLIENTS_CONF"; then
+    printf '%s\n' '$INCLUDE clients.d/*.conf' >> "$CLIENTS_CONF"
+    echo "[i] Added: \$INCLUDE clients.d/*.conf to $CLIENTS_CONF"
+  else
+    echo "[i] Include already present"
+  fi
+}
+
+fix_clients_dir_perms() {
+  echo "[*] Fixing clients.d directory ownership and permissions..."
+  mkdir -p "$CLIENTS_D"
+  chown root:"$FR_GROUP" "$CLIENTS_D" || true
+  chmod 750 "$CLIENTS_D" || true
+}
+
+write_client_entry() {
+  echo "[*] Writing clients.d entry..."
   local secret
   secret="$(tr -d '[:space:]' < "$RADIUS_SECRET_FILE")"
   [ -n "$secret" ] || { echo "[!] radius.secret is empty"; exit 2; }
 
-  mkdir -p "$CLIENTS_D"
-  sed "s#__RADIUS_SECRET__#${secret}#g" "$CLIENT_TMPL" > "$CLIENTS_D/6csef005w.conf"
-  chmod 640 "$CLIENTS_D/6csef005w.conf"
-  echo "[i] Wrote $CLIENTS_D/6csef005w.conf (AP client 192.168.140.1)"
-
-  # Protect the radius secret file if it's in a persistent location
-  chmod 600 "$RADIUS_SECRET_FILE" || true
-  echo "[i] Secured $RADIUS_SECRET_FILE (chmod 600)"
-}
-
-# Ensure EAP and mschap modules are enabled and default_eap_type is set to peap
-enable_eap_peap_mschapv2() {
-  [ -e "$MODS_EN/eap" ]   || ln -s "$MODS_AV/eap"   "$MODS_EN/eap"
-  [ -e "$MODS_EN/mschap" ]|| ln -s "$MODS_AV/mschap" "$MODS_EN/mschap"
-
-  # Ensure default_eap_type = peap exists in mods-available/eap (attempt safe in-place edit)
-  if grep -q "^[[:space:]]*default_eap_type" "$MODS_AV/eap"; then
-    sed -ri 's|^[[:space:]]*default_eap_type[[:space:]]*=.*|	default_eap_type = peap|' "$MODS_AV/eap"
+  local out="$CLIENTS_D/6csef005w.conf"
+  if [ -f "$CLIENT_TMPL" ]; then
+    sed -e "s#__RADIUS_SECRET__#${secret}#g" \
+        -e "s#__AP_IP__#${AP_IP}#g" \
+        "$CLIENT_TMPL" > "$out"
   else
-    # append near top of file (after first { ) to be safer
-    awk 'NR==1{print;next} {print}' "$MODS_AV/eap" > "$MODS_AV/eap.tmp" && mv "$MODS_AV/eap.tmp" "$MODS_AV/eap"
-    printf "\n\tdefault_eap_type = peap\n" >> "$MODS_AV/eap"
-  fi
-
-  echo "[i] Ensured eap and mschap modules enabled and default_eap_type set to peap"
+    cat > "$out" <<EOF
+client ap-6csef005w {
+  ipaddr   = ${AP_IP}
+  secret   = ${secret}
+  nas_type = other
 }
-
-# Convert a simple username:password file into FreeRADIUS 'users' format if needed.
-# If the source already looks like a FreeRADIUS 'users' file (contains 'Cleartext-Password' or other attrs),
-# copy it verbatim (with a backup).
-install_users() {
-  # Backup existing users file if present
-  if [ -f "$ETC/users" ]; then
-    cp -a "$ETC/users" "$ETC/users.bak.$(date +%s)"
-    echo "[i] Backed up existing $ETC/users to $ETC/users.bak.$(date +%s)"
-  fi
-
-  # Detect if USERS_FILE_SRC looks like FreeRADIUS users format
-  if grep -E -q 'Cleartext-Password|Reply-Message|Auth-Type|Ldap-UserDN' "$USERS_FILE_SRC"; then
-    cp -a "$USERS_FILE_SRC" "$ETC/users"
-    echo "[i] Detected full FreeRADIUS 'users' content; installed as-is to $ETC/users"
-  else
-    # Convert lines of "username:password" or "username password" into FreeRADIUS users entries
-    : > "$ETC/users"
-    while IFS= read -r line || [ -n "$line" ]; do
-      # skip blank and comment lines
-      case "$line" in
-        ''|\#*) continue ;;
-      esac
-
-      # split on ":" or whitespace
-      if echo "$line" | grep -q ":"; then
-        username="${line%%:*}"
-        password="${line#*:}"
-      else
-        username="$(echo "$line" | awk '{print $1}')"
-        password="$(echo "$line" | awk '{print $2}')"
-      fi
-
-      username="$(echo -n "$username" | tr -d '[:space:]')"
-      password="$(echo -n "$password" | sed 's/"/\\"/g')"
-
-      if [ -z "$username" ] || [ -z "$password" ]; then
-        echo "[!] Skipping malformed user line: $line"
-        continue
-      fi
-
-      # FreeRADIUS users entry using Cleartext-Password which works with PEAP/MSCHAPv2 (Windows clients)
-      cat >> "$ETC/users" <<EOF
-$((printf '%s' "$username") )	\tCleartext-Password := "$password"
-	\tReply-Message := "Welcome, $username"
 EOF
-    done < "$USERS_FILE_SRC"
-    echo "[i] Converted $USERS_FILE_SRC to FreeRADIUS users format at $ETC/users"
+  fi
+  chown root:"$FR_GROUP" "$out" || true
+  chmod 640 "$out"
+}
+
+enable_modules_and_peap() {
+  echo "[*] Enabling modules (eap, mschap, files) and setting default_eap_type = peap..."
+  mkdir -p "$MODS_EN" "$MODS_AV"
+  [ -e "$MODS_EN/eap" ]    || [ ! -e "$MODS_AV/eap" ]    || ln -s "$MODS_AV/eap"    "$MODS_EN/eap"
+  [ -e "$MODS_EN/mschap" ] || [ ! -e "$MODS_AV/mschap" ] || ln -s "$MODS_AV/mschap" "$MODS_EN/mschap"
+  [ -e "$MODS_EN/files" ]  || [ ! -e "$MODS_AV/files" ]  || ln -s "$MODS_AV/files"  "$MODS_EN/files"
+
+  if [ -f "$MODS_AV/eap" ]; then
+    if grep -Eq '^[[:space:]]*default_eap_type[[:space:]]*=' "$MODS_AV/eap"; then
+      sed -ri 's|^[[:space:]]*default_eap_type[[:space:]]*=.*|        default_eap_type = peap|' "$MODS_AV/eap"
+    else
+      awk '
+        BEGIN{ins=0}
+        /^\s*eap\s*\{/ { print; print "        default_eap_type = peap"; ins=1; next }
+        { print }
+        END{ if(!ins) print "        default_eap_type = peap" }
+      ' "$MODS_AV/eap" > "$MODS_AV/eap.tmp" && mv "$MODS_AV/eap.tmp" "$MODS_AV/eap"
+    fi
+  fi
+}
+
+install_users() {
+  echo "[*] Installing users file..."
+  local users_path="$ETC/users"
+  if [ -f "$users_path" ]; then
+    cp -a "$users_path" "$users_path.bak.$(date +%s)"
+    echo "[i] Backed up $users_path"
   fi
 
-  chmod 640 "$ETC/users"
-  echo "[i] Set permissions on $ETC/users"
-}
-
-# Basic config check
-check_config() {
-  echo "[i] Checking configuration (freeradius -C)..."
-  freeradius -C || {
-    echo "[!] freeradius -C reported issues. Please inspect output above."
-    # continue to attempt service restart so admins can test; do not exit here.
-  }
-}
-
-# Restart and enable service
-restart_service() {
-  if systemctl list-unit-files | grep -q '^freeradius'; then
-    systemctl restart freeradius || systemctl restart freeradius.service || true
-    systemctl enable freeradius || true
-    systemctl status --no-pager freeradius || true
-    echo "[i] Attempted to restart and enable freeradius service"
+  if grep -Eq 'Cleartext-Password|Reply-Message|Auth-Type|Ldap-UserDN' "$USERS_FILE_SRC"; then
+    cp -a "$USERS_FILE_SRC" "$users_path"
+    echo "[i] Detected FreeRADIUS 'users' format; copied as-is."
   else
-    echo "[!] systemd unit for freeradius not found; starting with plain command"
-    service freeradius restart || true
+    : > "$users_path"
+    while IFS= read -r line || [ -n "$line" ]; do
+      case "$line" in ''|\#*) continue ;; esac
+      local username password
+      if printf '%s' "$line" | grep -q ':'; then
+        username="${line%%:*}"; password="${line#*:}"
+      else
+        username="$(printf '%s' "$line" | awk '{print $1}')"
+        password="$(printf '%s' "$line" | awk '{print $2}')"
+      fi
+      username="$(printf '%s' "$username" | tr -d '[:space:]')"
+      password="$(printf '%s' "$password" | sed 's/"/\\"/g')"
+      [ -n "$username" ] && [ -n "$password" ] || { echo "[!] Skipping malformed: $line"; continue; }
+      printf '%s\tCleartext-Password := "%s"\n' "$username" "$password" >> "$users_path"
+      printf '\tReply-Message := "Welcome, %s"\n\n' "$username" >> "$users_path"
+    done < "$USERS_FILE_SRC"
+    echo "[i] Converted simple list to FreeRADIUS users format."
+  fi
+
+  chown root:"$FR_GROUP" "$users_path" || true
+  chmod 640 "$users_path"
+}
+
+fix_permissions() {
+  echo "[*] Fixing mods-config/files ownership and modes..."
+  if [ -d "$MODS_CFG/files" ]; then
+    chown -R root:"$FR_GROUP" "$MODS_CFG/files" || true
+    chmod 750 "$MODS_CFG/files" || true
+    [ -f "$MODS_CFG/files/authorize" ] && chmod 640 "$MODS_CFG/files/authorize" || true
+  fi
+  usermod -a -G ssl-cert "$FR_GROUP" 2>/dev/null || true
+}
+
+sanity_clients_glob() {
+  echo "[*] Verifying clients.d glob visibility..."
+  # List dir and show printable/escaped names
+  ls -ld "$CLIENTS_D"
+  ls -la "$CLIENTS_D"
+  ls -b  "$CLIENTS_D"
+  # Root shell glob test
+  bash -c 'for f in '"$CLIENTS_D"'/*.conf; do echo "MATCH:$f"; done'
+  # Directory stat for traverse permissions
+  stat -c 'dir=%n owner=%U group=%G mode=%A' "$CLIENTS_D"
+}
+
+check_config() {
+  echo "[*] Running config checks..."
+  # Stop to free the port then run extended check with full context
+  systemctl stop "$SERVICE_NAME" 2>/dev/null || true
+  if ! freeradius -XC; then
+    echo "[!] freeradius -XC reported issues (see above)."
   fi
 }
 
-# Add iptables rule to allow inbound ICMP echo-requests (ping to this Kali host) and persist it.
+restart_service() {
+  echo "[*] Starting and enabling service..."
+  systemctl restart "$SERVICE_NAME" || systemctl restart "$SERVICE_NAME".service || true
+  systemctl enable "$SERVICE_NAME" || true
+  systemctl status --no-pager "$SERVICE_NAME" || true
+}
+
 enable_icmp_persistent() {
-  # Accept echo-request to this host (any destination IP on this machine), from anywhere
+  echo "[*] Ensuring ICMP echo-request is allowed and persisted..."
   if ! iptables -C INPUT -p icmp --icmp-type echo-request -j ACCEPT 2>/dev/null; then
     iptables -I INPUT 1 -p icmp --icmp-type echo-request -j ACCEPT
-    echo "[i] Inserted iptables rule to ACCEPT inbound ICMP echo-request (ping) to this host"
-  else
-    echo "[i] ICMP echo-request iptables rule already present"
+    echo "[i] Inserted iptables rule"
   fi
-
-  # Save current IPv4 rules to persistent file
   mkdir -p /etc/iptables
   iptables-save > /etc/iptables/rules.v4
-  # If iptables-persistent is installed, /etc/iptables/rules.v4 is the default location
   if command -v netfilter-persistent >/dev/null 2>&1; then
     netfilter-persistent save || true
     netfilter-persistent reload || true
-    echo "[i] Persisted iptables rules using netfilter-persistent"
-  else
-    echo "[i] iptables-persistent/netfilter-persistent not available to auto-load rules; rules saved to /etc/iptables/rules.v4"
   fi
 }
 
-show_summary() {
-  echo "[OK] FreeRADIUS configured for WPA2-Enterprise (PEAP/MSCHAPv2) with tweaks."
-  echo " - Clients file: $CLIENTS_D/6csef005w.conf (AP 192.168.140.1)"
+verify_outputs() {
+  echo "----- VERIFY: systemd failure context (if any) -----"
+  systemctl status "$SERVICE_NAME" --no-pager || true
+  journalctl -xeu "$SERVICE_NAME".service --no-pager | tail -n 80 || true
+
+  echo "----- VERIFY: clients.conf include lines -----"
+  sed -n '1,200p' "$CLIENTS_CONF" | nl -ba | sed -n '1,120p'
+  grep -n '^\$INCLUDE[[:space:]]\+clients\.d/\*\.conf' "$CLIENTS_CONF" || echo "MISSING: \$INCLUDE clients.d/*.conf"
+
+  echo "----- VERIFY: client file syntax -----"
+  sed -n '1,120p' "$CLIENTS_D/6csef005w.conf" || true
+
+  echo "----- VERIFY: critical permissions -----"
+  ls -l "$CLIENTS_D/6csef005w.conf" 2>/dev/null || true
+  ls -l "$ETC/users" 2>/dev/null || true
+  [ -e "$MODS_EN/files" ] || ln -s "$MODS_AV/files" "$MODS_EN/files"
+  ls -ld "$MODS_CFG/files" 2>/dev/null || true
+  ls -l "$MODS_CFG/files/authorize" 2>/dev/null || true
+
+  echo "----- VERIFY: final freeradius -XC -----"
+  freeradius -XC || true
+}
+
+maybe_debug() {
+  if [ "$DEBUG_MODE" -eq 1 ]; then
+    echo "[*] Launching FreeRADIUS in foreground debug (freeradius -X)..."
+    systemctl stop "$SERVICE_NAME" || true
+    exec freeradius -X
+  fi
+}
+
+summary() {
+  echo "[OK] FreeRADIUS configured for WPA2-Enterprise (PEAP/MSCHAPv2)."
+  echo " - ETC path:     $ETC"
+  echo " - Clients file: $CLIENTS_D/6csef005w.conf (AP $AP_IP)"
   echo " - Users file:   $ETC/users"
-  echo " - EAP method:   PEAP with inner MSCHAPv2"
-  echo " - ICMP:         Inbound echo-requests to this Kali host are allowed (persisted)"
+  echo " - Modules:      eap, mschap, files (PEAP enforced)"
+  echo " - ICMP:         Inbound echo-requests allowed and persisted"
+  [ "$DEBUG_MODE" -eq 1 ] || echo " - Debug:        Run '$0 --debug' to start freeradius -X"
 }
 
 main() {
-  require_root
   require_files
   install_pkgs
-  write_clients
-  enable_eap_peap_mschapv2
+  ensure_clients_include
+  fix_clients_dir_perms
+  write_client_entry
+  enable_modules_and_peap
   install_users
+  fix_permissions
+  sanity_clients_glob
   check_config
   restart_service
   enable_icmp_persistent
-  show_summary
+  [ "$VERIFY_MODE" -eq 1 ] && verify_outputs
+  summary
+  maybe_debug
 }
 
 main "$@"
