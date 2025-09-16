@@ -38,32 +38,17 @@ Make all `.sh` scripts executable:
 find . -type f -name "*.sh" -exec chmod +x {} \;
 ```
 
-### 3. Launch Script Manager
-
-Use the menu-based launcher:
-
-```bash
-sudo ./ap_manager.sh
-```
-
-Follow on-screen prompts to select setup/config/attack scripts interactively.
 
 ---
 
 ## 🧰 Repository Structure
 
 ```plaintext
-├── activities/              # Lab activities and tasks
-├── adv-ap/               # Access Point setup scripts
-│   ├── openwrt/             # OpenWRT image and config
-│   └── radius/              # WPA2-Enterprise (FreeRADIUS)
-├── APconfigs/               # Access Point setup scripts
-│   └── malicious/           # Rogue/Evil Twin/DHCP setups
+├── ap/               # Access Point setup scripts
+│   └── filse/           # Advanced AP flles for setups
 ├── captures/                # Wireshark PCAPs
 ├── configs/                 # Base setup and teardown for Pi/Kali
 ├── docs/                    # Configurations and setup documentation for (configs files)
-├── attacks-automation/      # Shell scripts automating attacks
-├── lablaunch.sh            # Interactive launcher menu
 ```
 
 ---
@@ -81,9 +66,7 @@ Follow on-screen prompts to select setup/config/attack scripts interactively.
 
 ## Where to Go Next
 
-* Lab activity details: [`activities/activities.md`](activities/activities.md)
 * Setup script documentation: [`docs/README.md`](docs/README.md)
-* Interactive launcher: [`lablaunch.sh`](./lablaunch.sh)
 
 ---
 
