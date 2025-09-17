@@ -33,13 +33,14 @@ detect_layout() {
 ETC="$(detect_layout)"
 CLIENTS_D="$ETC/clients.d"; CLIENTS_CONF="$ETC/clients.conf"
 MODS_AV="$ETC/mods-available"; MODS_EN="$ETC/mods-enabled"; MODS_CFG="$ETC/mods-config"
+SERVICE_NAME="freeradius"
 
 detect_group() {
   if getent group freerad >/dev/null; then echo "freerad"
   elif getent group radiusd >/dev/null; then echo "radiusd"
   else echo "freerad"; fi
 }
-FR_GROUP="$(detect_group)"; SERVICE_NAME="freeradius"
+FR_GROUP="$(detect_group)"
 
 require_files() {
   [ -f "$RADIUS_SECRET_FILE" ] || { echo "[!] Missing: $RADIUS_SECRET_FILE"; exit 2; }
@@ -56,25 +57,21 @@ ensure_clients_include() {
   echo "[*] Rewriting clients.conf includes explicitly (no globs)..."
   touch "$CLIENTS_CONF"
 
-  # Remove any glob includes that break on this build
   sed -i -E '/^\s*\$INCLUDE\s+.*clients\.d\/\*\.conf\s*$/d' "$CLIENTS_CONF"
 
-  # Remove any duplicate explicit includes
   sed -i -E '/^\s*\$INCLUDE\s+clients\.d\/[A-Za-z0-9._-]+\.conf\s*$/d' "$CLIENTS_CONF"
 
-  # Add explicit includes for each real .conf in clients.d
   if ls "$CLIENTS_D"/*.conf >/dev/null 2>&1; then
     {
       echo "# (auto) explicit includes added by setup-radius-server.sh"
       for f in "$CLIENTS_D"/*.conf; do
         [ -f "$f" ] || continue
-        bn="${f##*/}"
-        echo "\$INCLUDE clients.d/$bn"
+        echo "\$INCLUDE clients.d/$(basename "$f")"
       done
     } >> "$CLIENTS_CONF"
-    echo "[i] Added explicit includes for: $(ls -1 "$CLIENTS_D"/*.conf | xargs -n1 basename | tr '\n' ' ')"
+    echo "[i] Added explicit includes for files in $CLIENTS_D"
   else
-    echo "[!] No .conf files found in $CLIENTS_D — nothing to include."
+    echo "[i] No .conf files in $CLIENTS_D yet."
   fi
 }
 
@@ -105,19 +102,37 @@ EOF
   chown root:"$FR_GROUP" "$out"; chmod 640 "$out"
 }
 
-add_localhost_client() {
-  echo "[*] Adding localhost RADIUS client..."
+ensure_localhost_client() {
+  echo "[*] Ensuring localhost RADIUS client with correct secret..."
   local secret; secret="$(tr -d '[:space:]' < "$RADIUS_SECRET_FILE")"
-  mkdir -p "$CLIENTS_D"
-  cat > "$CLIENTS_D/localhost.conf" <<EOF
+  [ -n "$secret" ] || { echo "[!] radius.secret empty"; exit 2; }
+
+  local candidates=()
+  if [ -f "$CLIENTS_CONF" ]; then candidates+=("$CLIENTS_CONF"); fi
+  if ls "$CLIENTS_D"/*.conf >/dev/null 2>&1; then
+    for f in "$CLIENTS_D"/*.conf; do candidates+=("$f"); done
+  fi
+
+  local updated=0
+  for f in "${candidates[@]}"; do
+    if grep -qE 'ipaddr[[:space:]]*=[[:space:]]*127\.0\.0\.1' "$f"; then
+      sed -i -E '/client[[:space:]]+[^}]+\{/,/}/ { /ipaddr[[:space:]]*=[[:space:]]*127\.0\.0\.1/,/}/ s/^[[:space:]]*secret[[:space:]]*=.*/\tsecret = '"$secret"'/' "$f"
+      echo "[i] Updated localhost secret in: $f"
+      updated=1
+    fi
+  done
+
+  if [ "$updated" -eq 0 ]; then
+    cat > "$CLIENTS_D/localhost.conf" <<EOF
 client localhost {
   ipaddr = 127.0.0.1
   secret = ${secret}
   nastype = other
 }
 EOF
-  chown root:"$FR_GROUP" "$CLIENTS_D/localhost.conf"
-  chmod 640 "$CLIENTS_D/localhost.conf"
+    chown root:"$FR_GROUP" "$CLIENTS_D/localhost.conf"; chmod 640 "$CLIENTS_D/localhost.conf"
+    echo "[i] Created: $CLIENTS_D/localhost.conf"
+  fi
 }
 
 enable_site_inner_tunnel() {
@@ -126,6 +141,8 @@ enable_site_inner_tunnel() {
     if [ ! -e "$ETC/sites-enabled/inner-tunnel" ] && [ -e "$ETC/sites-available/inner-tunnel" ]; then
       ln -s "$ETC/sites-available/inner-tunnel" "$ETC/sites-enabled/inner-tunnel"
       echo "[i] Enabled inner-tunnel"
+    else
+      echo "[i] inner-tunnel already enabled"
     fi
   fi
 }
@@ -180,10 +197,10 @@ summary() {
 main() {
   require_files
   install_pkgs
-  ensure_clients_include
   fix_clients_dir_perms
   write_client_entry
-  add_localhost_client
+  ensure_localhost_client
+  ensure_clients_include
   enable_site_inner_tunnel
   install_users
   fix_permissions
