@@ -63,7 +63,8 @@ find . -type f -name "*.sh" -exec chmod +x {} \;
 
 ## Where to Go Next
 
-* Setup script documentation: [`docs/README.md`](docs/README.md)
+* For AP scripts documentation: [`docs/APs.md`](docs/APs.md)
+* For configuration script documentation: [`docs/configs-readme.md`](docs/configs-readme.md)
 
 ---
 
