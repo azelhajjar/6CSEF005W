@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# switch-dns.sh — manage /etc/resolv.conf profiles (university vs home)
+# switch-dns.sh - manage /etc/resolv.conf profiles (university vs home)
 # Usage:
 #   sudo ./switch-dns.sh uni
 #   sudo ./switch-dns.sh home

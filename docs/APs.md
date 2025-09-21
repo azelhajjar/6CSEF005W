@@ -5,9 +5,15 @@ When an AP runs, for each lab , it uses two key components to create a wireless 
 - **hostapd**: handles the Wi-Fi access point itself (SSID, channel, authentication).
 - **dnsmasq**: provides DHCP services so clients can get an IP address and DNS information.
 
-The acess point  script prepares the environment, writes the configuration files for both tools, starts them, and then shows client connection logs.
+This is a summary of the network settings for the Access Points.
+- AP network: `192.168.140.0/24`
+- AP address: `192.168.140.1`
+- DHCP range: `192.168.140.50 – 192.168.140.150`
+- Fixed AP MAC address: `02:11:22:33:44:55`
 
----
+The acess point  script prepares the environment, writes the configuration files for both tools, starts them, and then shows client connection logs.
+More details about the configurations is explained below
+
 
 ## Hostapd Configuration
 

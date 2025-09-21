@@ -23,12 +23,27 @@ This repository supports the practical labs for the Wireless Network Security mo
 
 ### 1. Clone the Repository
 
+Each time you set up the Virtual machine, on a university machine, you will need to **clone** the VM each time.
+- To clone the module repository - 
+1. Make sure you are in your home directory:
 ```bash
+cd ~
 git clone https://github.com/azelhajjar/6CSEF005W.git
 ```
+
+This is to ensure that you are working on a clean Kali VM and not following from someone elses work. 
+
+- **Clone**: The first time you set up the labs on your laptop, use `git clone` to copy the entire repository:
+
+
 ```bash
 cd 6CSEF005W
 ```
+## 2. Updating the Repository: Clone vs Pull
+
+- **Clone**: The first time you set up the labs on your laptop, use `git clone` to copy the entire repository:
+```bash
+git clone https://github.com/azelhajjar/6CSEF005W.git
 
 ### 2. Make Scripts Executable
 
@@ -37,9 +52,6 @@ Make all `.sh` scripts executable:
 ```bash
 find . -type f -name "*.sh" -exec chmod +x {} \;
 ```
-
-
----
 
 ## 🧰 Repository Structure
 
@@ -50,6 +62,32 @@ find . -type f -name "*.sh" -exec chmod +x {} \;
 ├── configs/                 # Base setup and teardown for Pi/Kali
 ├── docs/                    # Configurations and setup documentation for (configs files)
 ```
+For setup 
+
+
+## Launching an Access Point (When working in pairs)
+
+In most in-class activities the lab tutor will run the AP while you perform the attacker role from your own machine.
+
+**However**, for some activities you will work in **pairs**: one student runs the AP and the other performs the attacker activity
+- This arrangement prevents an AP from being taken down quickly and stopping other students from completing their work;
+- It also means paired students can continue the exercise regardless of what others are doing. More information about this will be provided in each activity where it is needed.
+
+When you need to run an AP, you should browse the `ap` folder in the repository and run the AP related to the activity. More information will be in the lab weekly activity document on Blackboard.
+- To run an Access Point on one Virtual Machine
+1. Make sure you Alfa adapter is attached to the VM. You can check if the VM can see it correctly:
+```bash
+iw dev
+```
+2. Go to the `ap` folder: 
+```bash
+cd ~/6CSEF005W/ap/
+```
+3. Run the script: for example for the Open Access Point, run: 
+```bash
+sudo ./open-ap.sh
+```
+4. To stop the AP, press `ctrl+c` . This will run the `teardown-ap.sh` script and return your alfa adapter to manged mode. 
 
 ---
 

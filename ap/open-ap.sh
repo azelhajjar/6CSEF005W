@@ -1,8 +1,8 @@
 #!/bin/bash
-# /home/kali/6csef005w/ap/open-ap.sh
+# /home/kali/6CSEF005W/ap/open-ap.sh
 # Start an OPEN AP with hostapd + dnsmasq on a VM using wlan0.
 # Runtime files/logs: /home/kali/tmp_ap
-# Tailing: Clients association + DHCP lease events (MAC/IP)
+# Tailing: Clients association (from hostapd and dnsmasq) and DHCP lease events - MAC/IP)
 
 set -euo pipefail
 
@@ -17,7 +17,6 @@ info()    { printf "[${YELLOW}i${RESET}] %s\n" "$*"; }
 ok()      { printf "[${GREEN}✓${RESET}] %s\n" "$*"; }
 err()     { printf "[${RED}!${RESET}] %s\n" "$*" 1>&2; }
 
-# ---Envrionment variables(check for AP changes in class------
 ENV_FILE="$(dirname "$0")/../.env"
 [ -f "$ENV_FILE" ] && . "$ENV_FILE"
 
@@ -53,22 +52,12 @@ preflight() {
 
   info "Resetting interface state: $INTERFACE"
   ip link set "$INTERFACE" down 2>/dev/null || true
-  iw dev "$INTERFACE" set type managed 2>/dev/null || true
-  ip addr flush dev "$INTERFACE" 2>/dev/null || true
   
-  # Set fixed MAC address for consistent BSSID
-  info "Setting fixed MAC address for consistent BSSID"
+  info "Setting fixed MAC address for stable BSSID"
   ip link set dev "$INTERFACE" address 02:11:22:33:44:55
   
-  ip link set "$INTERFACE" up
-  sleep 1
-  
-  ip link set "$INTERFACE" down 2>/dev/null || true
   iw dev "$INTERFACE" set type __ap 2>/dev/null || true
-  
-  # Set MAC again after AP mode change
-  ip link set dev "$INTERFACE" address 02:11:22:33:44:55
-  
+  ip addr flush dev "$INTERFACE" 2>/dev/null || true
   ip link set "$INTERFACE" up
   sleep 1
 
@@ -83,7 +72,6 @@ driver=nl80211
 ssid=$SSID
 hw_mode=g
 channel=$CHANNEL
-bssid=02:11:22:33:44:55
 auth_algs=1
 wmm_enabled=0
 ignore_broadcast_ssid=0
@@ -120,7 +108,6 @@ start_services() {
           --log-facility="$RUNTIME_DIR/dnsmasq_open.log"
 
   ok "AP Enabled: SSID ${CYAN}${SSID}${RESET} on ${CYAN}${INTERFACE}${RESET} (${CYAN}${AP_IP_BASE}${RESET})"
-  ok "Fixed BSSID: ${CYAN}02:11:22:33:44:55${RESET}"
   info "Logs: hostapd=${RUNTIME_DIR}/hostapd_open.log  dnsmasq=${RUNTIME_DIR}/dnsmasq_open.log"
 }
 
