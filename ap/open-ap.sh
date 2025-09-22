@@ -82,6 +82,7 @@ hw_mode=g
 channel=$CHANNEL
 auth_algs=1
 wmm_enabled=0
+bssid=02:11:22:33:44:55
 ignore_broadcast_ssid=0
 logger_syslog=-1
 logger_syslog_level=2
@@ -119,6 +120,25 @@ start_services() {
   info "Logs: hostapd=${RUNTIME_DIR}/hostapd_open.log  dnsmasq=${RUNTIME_DIR}/dnsmasq_open.log"
 }
 
+setup_unmanaged_interface() {
+  local config_file="/etc/NetworkManager/conf.d/99-unmanaged-devices.conf"
+  
+  if grep -q "interface-name:$INTERFACE" "$config_file" 2>/dev/null; then
+    info "NetworkManager already configured to ignore $INTERFACE"
+    return
+  fi
+  
+  info "Configuring NetworkManager to ignore $INTERFACE..."
+  
+  cat > "$config_file" <<EOF
+[keyfile]
+unmanaged-devices=interface-name:$INTERFACE
+EOF
+  
+  systemctl restart NetworkManager
+  sleep 2
+  ok "NetworkManager configured to ignore $INTERFACE"
+}
 tail_clean() {
   info "Showing connections and DHCP leases (Ctrl-C to stop)..."
   stdbuf -oL -eL tail -F "$RUNTIME_DIR/hostapd_open.log" "$RUNTIME_DIR/dnsmasq_open.log" | \
@@ -137,6 +157,7 @@ tail_clean() {
 
 main() {
   require_root
+  setup_unmanaged_interface
   trap cleanup_trap INT TERM
   "$COURSE_DIR/ap/teardown-ap.sh" || true
   ensure_dirs
@@ -145,6 +166,7 @@ main() {
   write_dnsmasq_conf
   start_services
   tail_clean
+  
 }
 
 main "$@"
