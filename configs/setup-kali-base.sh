@@ -43,7 +43,6 @@ main() {
   service_sanity
 
   echo "[✓] Baseline installation complete."
-  echo "Repo path expected at: /home/kali/6CSEF005W/"
   echo "Runtime directory:     /home/kali/tmp_ap/"
 }
 echo "[i] If you see a 'Relogin or restart required' message,"

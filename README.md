@@ -7,7 +7,7 @@
 
 ---
 
-## Purpose of this Document
+## Purpose of this repositoru
 
 This repository supports the practical labs for the Wireless Network Security module. It includes:
 
@@ -17,33 +17,36 @@ This repository supports the practical labs for the Wireless Network Security mo
 * Folder structure and usage guidelines
 * Links to markdown lab guides
 
+## Weekly Lab Structure and Release Schedule
+
+Below are the lab activities that we will be doing over the term. Access Point scripts and any other files needed for each activity will be released on the day to the module repository.  
+The accompanying lab activity can be downloaded from Blackboard; you will find it in the **Lab Activities** section under the corresponding week. The table below maps week → lab title → when it will appear.
+
+| Week | Topic               | When it will appear |
+|------|------------------------------------------------|---------------------|
+| Week 1 | Environment setup / Linux basics              | Released Week 1     |      
+| Week 2 | Wireshark, reconnaissance, open APs           |  Released Week 2     |
+| Week 3 | WEP AP-side attacks and cracking              |  Released Week 3     |
+| Week 4 | WPA2 AP-side attacks and cracking             | Released Week 4     |
+| Week 5 | WPA2 Enterprise attacks                       | Released Week 5     |
+| Week 7 | Physical layer attacks, MAC filters, DoS      | Released Week 7     |
+| Week 8 | Client-side attacks                           |  Released Week 8     |
+| Week 9 | Evil twin and rogue access points             | Released Week 9     |
+| Week 10|  Captive Attacks                              | Released Week 10    |
+
+Notes:
+* PCAPs produced during in-class runs will be stored in `captures/` and linked from the corresponding lab guide. They will be released in Week 10 to support your assignment completion.
+
 ---
 
-## Getting Started
-
-### 1. Clone the Repository
-
+## Getting the Repository- - On a university machine
 Each time you set up the Virtual machine, on a university machine, you will need to **clone** the VM each time.
-- To clone the module repository - 
-1. Make sure you are in your home directory:
-```bash
-cd ~
-git clone https://github.com/azelhajjar/6CSEF005W.git
-```
 
-This is to ensure that you are working on a clean Kali VM and not following from someone elses work. 
-
-- **Clone**: The first time you set up the labs on your laptop, use `git clone` to copy the entire repository:
-
-
-```bash
-cd 6CSEF005W
-```
-## 2. Updating the Repository: Clone vs Pull
-
-- **Clone**: The first time you set up the labs on your laptop, use `git clone` to copy the entire repository:
+- **Clone**: Each  time you set up the labs on your laptop, use `git clone` to copy the entire repository:
 ```bash
 git clone https://github.com/azelhajjar/6CSEF005W.git
+```
+**Note** Observe in which folder you are cloning the repository. If you have just opened a terminal, the terminal will default to `/home/kali` and if you clone the repository there, the repository will sit in `/home/kali/6CSEF005W`. If you want the repository to be on the Desktop, you will need to first browse to the Desktop location using `cd ~/Desktop`.
 
 ### 2. Make Scripts Executable
 
@@ -53,6 +56,18 @@ Make all `.sh` scripts executable:
 find . -type f -name "*.sh" -exec chmod +x {} \;
 ```
 
+```bash
+cd 6CSEF005W
+```
+## Getting the Repository- On your own machine
+**On your own machine, you can update the Repository weekly rather than clonning it: Clone vs Pull**
+
+On your own machine, you do not need to download the repository each time. Once downloaded using the same method as above, you can simply go to the folder where it is and use `git pull` to fetch any updates.
+Make sure you are in the correct folder first. For example, if you cloned the repository to the Kali home folder, go to the repository folder using `cd ~/6CSEF005W` and then type:
+
+```bash
+git pull
+```
 ## 🧰 Repository Structure
 
 ```plaintext
@@ -62,8 +77,6 @@ find . -type f -name "*.sh" -exec chmod +x {} \;
 ├── configs/                 # Base setup and teardown for Pi/Kali
 ├── docs/                    # Configurations and setup documentation for (configs files)
 ```
-For setup 
-
 
 ## Launching an Access Point (When working in pairs)
 
@@ -94,10 +107,10 @@ sudo ./open-ap.sh
 ## Environment Overview
 
 | Role          | Device                | Purpose                               |
-| ------------- | --------------------- | ------------------------------------- |
+| ------------- | ------------------------------------------------------ | ------------------------------------- |
 | Attacker      | Kali Linux            | Launches attacks and captures traffic |
-| Victim Device | Android / Laptop      | Connects to test networks             |
-| ------------- | --------------------- | ------------------------------------- |
+| Victim Device | Android / Laptop /Kali/Host machine (Windows)      | Connects to test networks             |
+| ------------- | ------------------------------------------------------ | ------------------------------------- |
 
 ## Where to Go Next
 

@@ -1,6 +1,5 @@
 #!/bin/bash
-# /home/kali/6CSEF005W/ap/open-ap.sh
-# Start an OPEN AP with hostapd + dnsmasq on a VM using wlan0.
+# open-ap.sh - Start an OPEN AP with hostapd + dnsmasq on a VM using wlan0.
 # Runtime files/logs: /home/kali/tmp_ap
 # Tailing: Clients association (from hostapd and dnsmasq) and DHCP lease events - MAC/IP)
 
@@ -12,20 +11,23 @@ YELLOW=$'\033[1;33m'
 CYAN=$'\033[0;36m'
 RED=$'\033[0;31m'
 
-
 info()    { printf "[${YELLOW}i${RESET}] %s\n" "$*"; }
 ok()      { printf "[${GREEN}✓${RESET}] %s\n" "$*"; }
 err()     { printf "[${RED}!${RESET}] %s\n" "$*" 1>&2; }
 
-ENV_FILE="$(dirname "$0")/../.env"
+# Dynamic path detection - find the actual repository root
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+ENV_FILE="$REPO_ROOT/.env"
 [ -f "$ENV_FILE" ] && . "$ENV_FILE"
 
 INTERFACE="${INTERFACE:-wlan0}"
 AP_IP="${AP_IP:-192.168.140.1/24}"
 AP_IP_BASE="${AP_IP_BASE:-192.168.140.1}"
 REGDOM="${REGDOM:-GB}"
-RUNTIME_DIR="${RUNTIME_DIR:-/home/kali/tmp_ap}"
-COURSE_DIR="${COURSE_DIR:-/home/kali/6CSEF005W}"
+RUNTIME_DIR="${RUNTIME_DIR:-/home/kali/tmp_ap}"  
+COURSE_DIR="${COURSE_DIR:-$REPO_ROOT}"        
 SSID="${SSID:-6CSEF005W_OPEN_AP}"
 CHANNEL="${CHANNEL:-6}"
 
@@ -44,9 +46,15 @@ cleanup_trap() {
 
 ensure_dirs() {
   mkdir -p "$RUNTIME_DIR"
+  if [ "${EUID:-$(id -u)}" -eq 0 ] && id -u kali >/dev/null 2>&1; then
+    chown -R kali:kali "$RUNTIME_DIR" 2>/dev/null || true
+  fi
 }
 
 preflight() {
+  info "Repository root: $REPO_ROOT"
+  info "Runtime directory: $RUNTIME_DIR"
+  
   info "Setting regulatory domain: $REGDOM"
   iw reg set "$REGDOM" || true
 
