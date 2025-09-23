@@ -1,7 +1,10 @@
 #!/bin/bash
-# teardown-ap.sh
-# Stop hostapd/dnsmasq started by lab scripts, clear IPs,
-# reset wlan0 to managed, and clean runtime files.
+# Author: Dr Ayman El hajjar
+# File: ap/teardown-ap.sh
+# Stop hostapd/dnsmasq started by lab scripts, clear IPs.
+# Reset wlan0 to managed, and clean runtime files.
+# Extra files: None required
+# Tailing: Clients association + DHCP lease events (MAC/IP)
 
 set -euo pipefail
 
@@ -21,7 +24,13 @@ require_root() {
     exit 1
   fi
 }
-
+force_kill_hostapd() {
+  echo "[i] Force killing all hostapd processes..."
+  pkill -9 hostapd 2>/dev/null || true
+  sleep 2
+  # Also kill any processes using the interface
+  lsof "/dev/wlan0" 2>/dev/null | awk 'NR>1 {print $2}' | xargs -r kill -9 2>/dev/null || true
+}
 stop_daemon_by_pid() {
   local name="$1"
   local pidfile="$2"
@@ -77,6 +86,7 @@ main() {
   require_root
   echo "[*] Teardown starting..."
   stop_daemons
+  force_kill_hostapd
   reset_interface
   clean_runtime
   echo "[✓] Teardown complete. $INTERFACE is up in managed mode with no IP."

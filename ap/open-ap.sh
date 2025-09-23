@@ -1,7 +1,11 @@
 #!/bin/bash
-# open-ap.sh - Start an OPEN AP with hostapd + dnsmasq on a VM using wlan0.
-# Runtime files/logs: /home/kali/tmp_ap
-# Tailing: Clients association (from hostapd and dnsmasq) and DHCP lease events - MAC/IP)
+# Author: Dr Ayman El hajjar
+# File: ap/open-ap.sh
+# Open WiFi Access Point - no authentication required
+# Extra files: None required
+# Tailing: Clients association + DHCP lease events (MAC/IP)
+# Note: Change SSID variable to customize AP name
+
 
 set -euo pipefail
 
@@ -51,7 +55,7 @@ ensure_dirs() {
   fi
 }
 
-preflight() {
+docheckbefore() {
   info "Repository root: $REPO_ROOT"
   info "Runtime directory: $RUNTIME_DIR"
   
@@ -82,7 +86,6 @@ hw_mode=g
 channel=$CHANNEL
 auth_algs=1
 wmm_enabled=0
-bssid=02:11:22:33:44:55
 ignore_broadcast_ssid=0
 logger_syslog=-1
 logger_syslog_level=2
@@ -161,7 +164,7 @@ main() {
   trap cleanup_trap INT TERM
   "$COURSE_DIR/ap/teardown-ap.sh" || true
   ensure_dirs
-  preflight
+  docheckbefore
   write_hostapd_conf
   write_dnsmasq_conf
   start_services
