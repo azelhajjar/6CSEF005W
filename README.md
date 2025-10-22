@@ -29,10 +29,8 @@ The accompanying lab activity can be downloaded from Blackboard; you will find i
 | Week 3 | WEP AP-side attacks and cracking              |  Released Week 3     |
 | Week 4 | WPA2 AP-side attacks and cracking             | Released Week 4     |
 | Week 5 | WPA2 Enterprise attacks                       | Released Week 5     |
-| Week 7 | Physical layer attacks, MAC filters, DoS      | Released Week 7     |
-| Week 8 | Client-side attacks                           |  Released Week 8     |
-| Week 9 | Evil twin and rogue access points             | Released Week 9     |
-| Week 10|  Captive Attacks                              | Released Week 10    |
+| Week 8/9 | Client-side attacks                         |  Released Week 8     |
+| Week 10 | Physical layer attacks, MAC filters, DoS      | Released Week 10    |
 
 Notes:
 * PCAPs produced during in-class runs will be stored in `captures/` and linked from the corresponding lab guide. They will be released in Week 10 to support your assignment completion.
