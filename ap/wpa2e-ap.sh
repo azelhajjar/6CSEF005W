@@ -21,7 +21,7 @@ RUNTIME_DIR="${RUNTIME_DIR:-/home/kali/tmp_ap}"
 COURSE_DIR="${COURSE_DIR:-$(dirname "$(dirname "$(realpath "$0")")")}"
 FILES_DIR="${FILES_DIR:-$COURSE_DIR/ap/files}"
 SSID="${SSID:-6CSEF005W-WPA2E-AP}"
-CHANNEL="${CHANNEL:-6}"
+CHANNEL="${CHANNEL:-8}"
 
 RADIUS_ADDR="${RADIUS_ADDR:-127.0.0.1}"
 RADIUS_PORT="${RADIUS_PORT:-1812}"
