@@ -33,7 +33,7 @@ REGDOM="${REGDOM:-GB}"
 RUNTIME_DIR="${RUNTIME_DIR:-/home/kali/tmp_ap}"
 COURSE_DIR="${COURSE_DIR:-$REPO_ROOT}"
 SSID="${SSID:-6CSEF005W-WPA2-AP}"
-CHANNEL="${CHANNEL:-6}"
+CHANNEL="${CHANNEL:-7}"
 WPA_PASSPHRASE="${WPA_PASSPHRASE:-password123}"  # Weak password for educational cracking
 
 require_root() {
