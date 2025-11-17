@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wi-Fi Access Portal</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 300px;
+      text-align: center;
+    }
+    input[type="text"], input[type="password"] {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #0078D7;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Welcome to 6CSEF005W AP</h2>
+    <p>Please log in to access the internet</p>
+<form method="POST" action="/">
+  <input type="text" name="username" placeholder="Email or Username" required><br>
+  <input type="password" name="password" placeholder="Password" required><br>
+  <button type="submit">Connect</button>
+</form>
+  </div>
+</body>
+<script>
+document.querySelector('form').addEventListener('submit', function(e){
+  e.preventDefault();
+  // show success UI without sending credentials anywhere
+  document.body.innerHTML = `
+    <div style="font-family:Arial;padding:40px;text-align:center">
+      <h2>Connected</h2>
+      <p>You are now connected to the AP.</p>
+    </div>`;
+  console.log('LAB: credentials entered (not stored):', {
+    user: this.username?.value || '(none)',
+    pass: this.password?.value ? '***' : '(none)'
+  });
+});
+</script>
+
+</html>
